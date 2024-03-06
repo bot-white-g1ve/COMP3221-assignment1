@@ -45,14 +45,46 @@ def command_line_interface(node_id, neighbors, server_socket):
             shut_signal.set()
             server_socket.close()
 
+def format_routing_table_for_sending(routing_table):
+    lines = [f"{node_id} {info['distance']} {info['port_id']}" for node_id, info in neighbors.items()]
+    routing_table_str = "\n".join(lines)
+    return routing_table_str
+
+def init_routing_table(node_id, neighbors):
+    routing_table = {}
+    for neighbor_id, info in neighbors.items():
+        path = node_id + neighbor_id
+        routing_table[neighbor_id] = {'distance': info['distance'], 'path': path}
+    return routing_table
+
+def format_routing_table_for_sending(routing_table):
+    lines = [f"{node_id} {info['distance']} {info['path']}" for node_id, info in routing_table.items()]
+    routing_table_str = "\n".join(lines)
+    return routing_table_str
+
+def sending_routing_table(node_id, neighbors, routing_table):
+    routing_table_str = format_routing_table_for_sending(neighbors)
+    message = f"{len(neighbors)}\n{routing_table_str}"
+
+    for neighbor_id, info in neighbors.items():
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.connect(('localhost', info['port_id']))
+                s.sendall(message.encode('utf-8'))
+        except socket.error as e:
+            print(f"Error sending routing table to neighbor {neighbor_id}: {e}")
+        time.sleep(10)
+
 def start_server(node_id, port_id, config_file_path):
     neighbors = load_config(config_file_path)
+    rrouting_table = init_routing_table(node_id, neighbors)
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(('localhost', port_id))
     server_socket.listen()
 
     listening_thread = threading.Thread(target=listening_to_neighbors, args=(node_id, port_id, server_socket))
     cli_thread = threading.Thread(target=command_line_interface, args=(node_id, neighbors, server_socket))
+    
 
     listening_thread.start()
     cli_thread.start()
