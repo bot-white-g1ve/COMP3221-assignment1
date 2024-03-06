@@ -30,8 +30,7 @@ nx.draw(G, pos, with_labels=True, node_size=700, node_color="skyblue", alpha=0.6
 nx.draw_networkx_edge_labels(G, pos, edge_labels={(u, v): d['weight'] for u, v, d in edges})
 plt.title(f"Graph with 10 Nodes and {num_edges} Edges")
 plt.axis('off')
-plt.show()
-
+plt.savefig("graph.png", format="PNG")
 
 node_info = {}
 
