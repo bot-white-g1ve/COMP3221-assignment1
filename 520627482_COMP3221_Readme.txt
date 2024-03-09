@@ -3,14 +3,20 @@ Python 3.11.4
 
 # REQUIREMENTS.TXT
 
+# HOW TO GENERATE
+python3 graph_generator.py <dir_path>
+
 # HOW TO LAUNCH
 python3 COMP3221_A1_Routing.py <Node ID> <Port ID> <Config File Path>
 
 # HOW TO USE THE COMMAND LINE INTERFACE
 1. config
-Print out the current routing table
+Print out the initial config file
 
 2. shutdown
 Shutdown the node completely (terminate the program)
 args:
     -n [time]: Scheduled to shutdown the nod in [time] seconds
+
+3. routing table
+Print out the current routing table

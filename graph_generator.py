@@ -1,6 +1,11 @@
 import random
 import networkx as nx
 import matplotlib.pyplot as plt
+import sys
+
+if len(sys.argv) != 2:
+    print("Usage: python3 graph_generator.py <dir_path>")
+dir = sys.argv[1]
 
 # Generate a graph with 10 nodes
 G = nx.Graph()
@@ -30,7 +35,7 @@ nx.draw(G, pos, with_labels=True, node_size=700, node_color="skyblue", alpha=0.6
 nx.draw_networkx_edge_labels(G, pos, edge_labels={(u, v): d['weight'] for u, v, d in edges})
 plt.title(f"Graph with 10 Nodes and {num_edges} Edges")
 plt.axis('off')
-plt.savefig("graph.png", format="PNG")
+plt.savefig(f"{dir}/graph.png", format="PNG")
 
 node_info = {}
 
@@ -39,7 +44,7 @@ for node in G.nodes():
     node_info[node] = {neighbor: data['weight'] for neighbor, data in neighbors.items()}
 
 for label in nodes:
-    f = open(f"{label}config.txt", "w")
+    f = open(f"{dir}/{label}config.txt", "w")
     f.write(f"{len(node_info[label])}\n")
     neighbours = node_info[label]
     for neighbour in neighbours:

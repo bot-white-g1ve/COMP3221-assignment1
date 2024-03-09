@@ -29,7 +29,7 @@ def listening_to_neighbors(node_id, port_id, server_socket):
 
     print(f"[{node_id}] Node has stopped listening on port {port_id}")
 
-def command_line_interface(node_id, neighbors, server_socket):
+def command_line_interface(node_id, global_state, neighbors, server_socket):
     while not shut_signal.is_set():
         cmd = input()
         if cmd == "config":
@@ -44,6 +44,10 @@ def command_line_interface(node_id, neighbors, server_socket):
             time.sleep(wait_time)
             shut_signal.set()
             server_socket.close()
+        elif cmd == "routing table":
+            routing_table = global_state['routing_table']
+            for node_id, info in routing_table.items():
+                print(f"{node_id} {info['distance']} {info['path']}")
 
 def format_routing_table_for_sending(routing_table):
     lines = [f"{node_id} {info['distance']} {info['port_id']}" for node_id, info in neighbors.items()]
@@ -62,32 +66,38 @@ def format_routing_table_for_sending(routing_table):
     routing_table_str = "\n".join(lines)
     return routing_table_str
 
-def sending_routing_table(node_id, neighbors, routing_table):
-    routing_table_str = format_routing_table_for_sending(neighbors)
-    message = f"{len(neighbors)}\n{routing_table_str}"
+def sending_routing_table(node_id, global_state, neighbors):
+    while not shut_signal.is_set():
+        routing_table = global_state['routing_table']
+        routing_table_str = format_routing_table_for_sending(routing_table)
+        message = f"{len(routing_table)}\n{routing_table_str}"
 
-    for neighbor_id, info in neighbors.items():
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.connect(('localhost', info['port_id']))
-                s.sendall(message.encode('utf-8'))
-        except socket.error as e:
-            print(f"Error sending routing table to neighbor {neighbor_id}: {e}")
+        for neighbor_id, info in neighbors.items():
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.connect(('localhost', info['port_id']))
+                    s.sendall(message.encode('utf-8'))
+            except socket.error as e:
+                print(f"Error sending routing table to neighbor {neighbor_id}: {e}")
+        
         time.sleep(10)
 
 def start_server(node_id, port_id, config_file_path):
+    global_state = {}
     neighbors = load_config(config_file_path)
-    rrouting_table = init_routing_table(node_id, neighbors)
+    routing_table = init_routing_table(node_id, neighbors)
+    global_state['routing_table'] = routing_table
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind(('localhost', port_id))
     server_socket.listen()
 
     listening_thread = threading.Thread(target=listening_to_neighbors, args=(node_id, port_id, server_socket))
-    cli_thread = threading.Thread(target=command_line_interface, args=(node_id, neighbors, server_socket))
-    
+    cli_thread = threading.Thread(target=command_line_interface, args=(node_id, global_state, neighbors, server_socket))
+    sending_thread = threading.Thread(target=sending_routing_table, args=(node_id, global_state, neighbors))
 
     listening_thread.start()
     cli_thread.start()
+    sending_thread.start()
 
     cli_thread.join()
 
