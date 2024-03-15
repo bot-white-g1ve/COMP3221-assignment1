@@ -11,7 +11,7 @@ python3 COMP3221_A1_Routing.py <Node ID> <Port ID> <Config File Path>
 
 # HOW TO USE THE COMMAND LINE INTERFACE
 1. config
-Print out the initial config file
+Print out the config file
 
 2. shutdown
 Shutdown the node completely (terminate the program)
@@ -20,3 +20,13 @@ args:
 
 3. routing table
 Print out the current routing table
+
+4. change [neighbor] [new_cost]
+Change the link cost to [neighbor] to [new_cost]
+
+# Our features
+1. Every node will send its own routing table to its neighbors every 10 seconds
+
+2. When a node receives its neighbor's routing table, it will run the routing algorithm and update its own routing table.
+
+3. 60s after launching (The network is stable), whenever routing algorithm completed, the node will print current routing information in the terminal.
