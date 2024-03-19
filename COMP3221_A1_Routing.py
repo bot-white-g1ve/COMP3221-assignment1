@@ -165,7 +165,7 @@ def change_link_cost(my_id, des, cost, global_state, config_file_path):
 
     print("---- Routing Table updated ----")
     print_routing_table(my_id, global_state)
-    print("---------------------------------")
+    print("-------------------------------")
 
 def update_cost_in_file(file_path, target, new_cost):
     with open(file_path, 'r') as file:
@@ -239,7 +239,7 @@ def check_neighbors_alive(global_state, node_id):
         for node in timeout_neighbors:
             nodes_to_del = []
             print(f"Haven't received message from neighbor {node}, consider it down.")
-            print(f"It may take a while for the network to be stable, please type in \"routing table\" later to check if the routing table is correct. the routing table in \"Routing Algorithm Completed\" is untrustable.\n")
+            print(f"It may take a while for the network to be stable, please type in \"routing table\" later to check if the routing table is correct.\n")
             for dest, route in global_state['routing_table'].items():
                 #print(f"dest is {dest}, route is {route}\ndest is in global state neighbors? {dest in global_state['neighbors'].keys()}")
                 if dest not in global_state['neighbors'].keys() and node in route['path']:
@@ -251,6 +251,15 @@ def check_neighbors_alive(global_state, node_id):
             for node_to_del in nodes_to_del:
                 del global_state['routing_table'][node_to_del]
         time.sleep(10)
+
+def print_routing_thread(node_id, global_state):
+    while not shut_signal.is_set():
+        if not global_state['active']:
+            continue
+        print("---- Current Routing Table ----")
+        print_routing_table(node_id, global_state)
+        print("-------------------------------")
+        time.sleep(60)
 
 def start_server(node_id, port_id, config_file_path):
     global_state = {}
@@ -280,6 +289,7 @@ def start_server(node_id, port_id, config_file_path):
     cli_thread = threading.Thread(target=command_line_interface, args=(node_id, global_state, config_file_path, listening_socket))
     sending_thread = threading.Thread(target=sending_routing_table, args=(node_id, global_state, port_id+1000))
     check_thread = threading.Thread(target=check_neighbors_alive, args=(global_state, node_id))
+    print_thread = threading.Thread(target=print
 
     listening_thread.start()
     cli_thread.start()
