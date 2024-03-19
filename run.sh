@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # Path to your Python script and its directory
-SCRIPT_PATH="/Users/fizz/Desktop/comp3221/COMP3221-assignment1/Routing.py"
-CONFIG_DIR="/Users/fizz/Desktop/comp3221/COMP3221-assignment1/spec_example"
+CURRENT_FOLDER_PATH="/Users/advancedai/Desktop/UniIssue/comp3221/A1"
+SCRIPT_PATH="COMP3221_A1_Routing.py"
+CONFIG_DIR="spec"
 
 # List of node identifiers and their corresponding port numbers
 nodes_ports=("A 6000" "B 6001" "C 6002" "D 6003" "E 6004" "F 6005" "G 6006" "H 6007" "I 6008" "J 6009")
@@ -18,10 +19,10 @@ do
     osascript <<EOF
 tell application "Terminal"
     activate
-    do script "python $SCRIPT_PATH $node $port $config_file"
+    do script "cd $CURRENT_FOLDER_PATH && python3 $SCRIPT_PATH $node $port $config_file"
 end tell
 EOF
 
     # Add a slight delay to prevent any race conditions with opening terminals
-    sleep 1
+    sleep 0.5
 done

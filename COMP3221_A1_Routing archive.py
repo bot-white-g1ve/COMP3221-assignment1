@@ -18,15 +18,6 @@ def load_config(config_file_path):
             neighbors[node_id] = {'distance': distance, 'port_id': port_id, 'last_received': current_time}
     return neighbors
 
-def print_routing_table(node_id, global_state):
-        print(f"I am Node {node_id}")
-        routing_table = global_state['routing_table']
-        for des in sorted(routing_table.keys()):
-            dis = routing_table[des]['distance']
-            path = routing_table[des]['path']
-            if dis != float('inf'):
-                print(f"Least cost path from {node_id} to {des}: {path}, link cost: {dis:.1f}")
-
 def routing(node_id, message, global_state):
     lines = message.split('\n')
     fr = lines[0].strip()
@@ -66,7 +57,11 @@ def routing(node_id, message, global_state):
     #print(global_state['routing_print_allowed'])
     if if_changed and global_state['routing_print_allowed']:
         print("---- Routing Algorithm Completed ----")
-        print_routing_table(node_id, global_state)
+        print(f"I am Node {node_id}")
+        for des in sorted(routing_table.keys()):
+            dis = routing_table[des]['distance']
+            path = routing_table[des]['path']
+            print(f"Least cost path from {node_id} to {des}: {path}, link cost: {dis:.2f}")
         print("-------------------------------------")
 
 def listening_to_neighbors(node_id, port_id, server_socket, global_state, config_file_path):
@@ -114,7 +109,10 @@ def command_line_interface(node_id, global_state, config_file_path, server_socke
             server_socket.close()
         elif cmd == "routing table":
             print("---- Routing Table ----")
-            print_routing_table(node_id, global_state)
+            print(f"I am node {node_id}")
+            routing_table = global_state['routing_table']
+            for node, info in routing_table.items():
+                print(f"{node} {info['distance']} {info['path']}")
             print("------------------------")
         elif re.match(r"^change [a-zA-Z] \d+(\.\d+)?$", cmd):
             temp_split = cmd.split(" ")
@@ -163,9 +161,14 @@ def change_link_cost(my_id, des, cost, global_state, config_file_path):
     for node in nodes_to_delete:
         del global_state["routing_table"][node]
 
+    '''
     print("---- Routing Table updated ----")
-    print_routing_table(my_id, global_state)
+    print(f"I am node {node_id}")
+    routing_table = global_state['routing_table']
+    for node, info in routing_table.items():
+        print(f"{node} {info['distance']} {info['path']}")
     print("---------------------------------")
+    '''
 
 def update_cost_in_file(file_path, target, new_cost):
     with open(file_path, 'r') as file:
@@ -238,8 +241,7 @@ def check_neighbors_alive(global_state, node_id):
         timeout_neighbors = [node for node, info in global_state['neighbors'].items() if current_time - info['last_received'] > 12]
         for node in timeout_neighbors:
             nodes_to_del = []
-            print(f"Haven't received message from neighbor {node}, consider it down.")
-            print(f"It may take a while for the network to be stable, please type in \"routing table\" later to check if the routing table is correct. the routing table in \"Routing Algorithm Completed\" is untrustable.\n")
+            print(f"Haven't received message from neighbor {node}, consider it down.\n")
             for dest, route in global_state['routing_table'].items():
                 #print(f"dest is {dest}, route is {route}\ndest is in global state neighbors? {dest in global_state['neighbors'].keys()}")
                 if dest not in global_state['neighbors'].keys() and node in route['path']:
@@ -270,7 +272,7 @@ def start_server(node_id, port_id, config_file_path):
         print(f"{neighbor} {info['distance']} {info['port_id']}")
     '''
 
-    Timer(60, allow_routing_print, args=(global_state,)).start()
+    Timer(2, allow_routing_print, args=(global_state,)).start()
 
     listening_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     listening_socket.bind(('localhost', port_id))
