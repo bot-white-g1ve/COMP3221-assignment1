@@ -63,11 +63,13 @@ def routing(node_id, message, global_state):
                 if_changed = True
     global_state['routing_table'] = routing_table
     
-    #print(global_state['routing_print_allowed'])
+    #print(global_state['routing_print_allowed']
+    '''
     if if_changed and global_state['routing_print_allowed']:
         print("---- Routing Algorithm Completed ----")
         print_routing_table(node_id, global_state)
         print("-------------------------------------")
+    '''
 
 def listening_to_neighbors(node_id, port_id, server_socket, global_state, config_file_path):
     print(f"[{node_id}] Node is listening on port {port_id}\n")
@@ -162,10 +164,12 @@ def change_link_cost(my_id, des, cost, global_state, config_file_path):
     
     for node in nodes_to_delete:
         del global_state["routing_table"][node]
-
+    
+    '''
     print("---- Routing Table updated ----")
     print_routing_table(my_id, global_state)
     print("-------------------------------")
+    '''
 
 def update_cost_in_file(file_path, target, new_cost):
     with open(file_path, 'r') as file:
@@ -252,16 +256,17 @@ def check_neighbors_alive(global_state, node_id):
                 del global_state['routing_table'][node_to_del]
         time.sleep(10)
 
-def print_routing_thread(node_id, global_state):
+def print_routing_thread(node_id, global_state, time_to_print):
+    time.sleep(time_to_print)
     while not shut_signal.is_set():
         if not global_state['active']:
             continue
         print("---- Current Routing Table ----")
         print_routing_table(node_id, global_state)
         print("-------------------------------")
-        time.sleep(60)
+        time.sleep(20)
 
-def start_server(node_id, port_id, config_file_path):
+def start_server(node_id, port_id, config_file_path, time_to_print):
     global_state = {}
     neighbors = load_config(config_file_path)
     routing_table = init_routing_table(node_id, neighbors)
@@ -279,7 +284,7 @@ def start_server(node_id, port_id, config_file_path):
         print(f"{neighbor} {info['distance']} {info['port_id']}")
     '''
 
-    Timer(60, allow_routing_print, args=(global_state,)).start()
+    Timer(time_to_print, allow_routing_print, args=(global_state,)).start()
 
     listening_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     listening_socket.bind(('localhost', port_id))
@@ -289,17 +294,18 @@ def start_server(node_id, port_id, config_file_path):
     cli_thread = threading.Thread(target=command_line_interface, args=(node_id, global_state, config_file_path, listening_socket))
     sending_thread = threading.Thread(target=sending_routing_table, args=(node_id, global_state, port_id+1000))
     check_thread = threading.Thread(target=check_neighbors_alive, args=(global_state, node_id))
-    print_thread = threading.Thread(target=print
+    print_thread = threading.Thread(target=print_routing_thread, args=(node_id, global_state, time_to_print))
 
     listening_thread.start()
     cli_thread.start()
     sending_thread.start()
     check_thread.start()
+    print_thread.start()
 
     cli_thread.join()
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 4 and len(sys.argv) != 5:
         print("Usage: python3 COMP3221_A1_Routing.py <Node ID> <Port ID> <Config File Path>")
         sys.exit(1)
 
@@ -307,4 +313,17 @@ if __name__ == "__main__":
     port_id = int(sys.argv[2])
     config_file_path = sys.argv[3]
 
-    start_server(node_id, port_id, config_file_path)
+    if len(sys.argv) == 4:
+        time_to_print = 60
+    elif len(sys.argv) == 5:
+        time_to_print = int(sys.argv[4])
+
+    print("How to use the command line:")
+    print("1. config: print the config file content.")
+    print("2. shutdown -n [time]: shutdown this node in [time] seconds.")
+    print("3. routing table: print the current routing table.")
+    print("4. change [neighbor] [new_cost]: Change the link cost to [neighbor] to [new_cost]")
+    print("5. disable: disable this node.")
+    print("6. enable: enable this node.\n")
+
+    start_server(node_id, port_id, config_file_path, time_to_print)

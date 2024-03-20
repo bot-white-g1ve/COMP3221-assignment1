@@ -5,6 +5,8 @@ CURRENT_FOLDER_PATH="/Users/advancedai/Desktop/UniIssue/comp3221/A1"
 SCRIPT_PATH="COMP3221_A1_Routing.py"
 CONFIG_DIR="spec"
 
+time_to_print=60
+
 # List of node identifiers and their corresponding port numbers
 nodes_ports=("A 6000" "B 6001" "C 6002" "D 6003" "E 6004" "F 6005" "G 6006" "H 6007" "I 6008" "J 6009")
 # nodes_ports=("A 6000" "B 6001" "C 6002")
@@ -19,7 +21,7 @@ do
     osascript <<EOF
 tell application "Terminal"
     activate
-    do script "cd $CURRENT_FOLDER_PATH && python3 $SCRIPT_PATH $node $port $config_file"
+    do script "cd $CURRENT_FOLDER_PATH && python3 $SCRIPT_PATH $node $port $config_file $time_to_print"
 end tell
 EOF
 
