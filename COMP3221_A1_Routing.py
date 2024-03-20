@@ -318,7 +318,7 @@ if __name__ == "__main__":
     elif len(sys.argv) == 5:
         time_to_print = int(sys.argv[4])
 
-    print("How to use the command line:")
+    print("\nHow to use the command line:")
     print("1. config: print the config file content.")
     print("2. shutdown -n [time]: shutdown this node in [time] seconds.")
     print("3. routing table: print the current routing table.")
